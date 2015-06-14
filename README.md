@@ -12,6 +12,7 @@ Provides confuguration for CoreBLU beacons.
 Turn on Led / Buzzer of CoreBLU beacon.
 
 Scanning:
+
 		CorebluDeviceManager mCorebluDeviceManager= new CorebluDeviceManager(Activity);
 start scanning all beacons
 
@@ -59,7 +60,7 @@ Start scanning ibeacons
 		});
 
 Stop scanning ibeacons
-      mCorebluDeviceManager.stopiBeaconScan();
+          mCorebluDeviceManager.stopiBeaconScan();
 
 Configuration:
 
