@@ -12,7 +12,7 @@ Provides confuguration for CoreBLU beacons.
 Turn on Led / Buzzer of CoreBLU beacon.
 
 Scanning:
-
+		CorebluDeviceManager mCorebluDeviceManager= new CorebluDeviceManager(Activity);
 start scanning all beacons
 
      mCorebluDeviceManager.startAllBeaconScan(new AnyBeaconListener() {
@@ -143,9 +143,7 @@ Configuration:
       
 When connected configuration can be written as
 
-      	public void write()
-      	{
-      		if(!connected)
+      	if(!connected)
       		{
       			showToast("Not Connected");
       			return;
@@ -163,8 +161,21 @@ When connected configuration can be written as
       		mCorebluiBeaconConfiguration.setiBeaconCharacteristic(mCorebluiBeaconCharacteristic);
       
       
-      	}
+      	
             
             
 
 
+Turn on LED
+
+		if(connected)
+				{
+					mCorebluiBeaconConfiguration.TurnOnLED();
+				}
+				
+Turn on Buzzer
+
+		if(connected)
+				{
+					mCorebluiBeaconConfiguration.TurnOnBuzzer();
+				}
