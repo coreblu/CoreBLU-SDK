@@ -67,7 +67,7 @@ Configuration:
       new CorebluiBeaconConfiguration(Activity,iBeacon#getDevice,mCallBack);
       boolean connected = false ;
       
-      CorebluiBeaconConfiguration.connect();
+      mCorebluiBeaconConfiguration.connect();
       
       CorebluiBeaconConfiguration.CallBack mCallBack = new CorebluiBeaconConfiguration.CallBack(){
 
@@ -141,7 +141,8 @@ Configuration:
       		};
       		
       
-      //Method to write Configuration
+When connected configuration can be written as
+
       	public void write()
       	{
       		if(!connected)
