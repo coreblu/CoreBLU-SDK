@@ -77,7 +77,7 @@ public class ListAdapterIbeacon extends ArrayAdapter<iBeacon> {
 	}
 
 	public iBeacon getobj(int pos) {
-		return new ArrayList<iBeacon>(it.values()).get(pos);
+		return Items.get(pos);
 	}
 
 	@Override
