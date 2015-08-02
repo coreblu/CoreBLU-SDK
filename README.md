@@ -12,9 +12,10 @@ SDK:<br>
 Provides asynchoronous beacon scanning.<br>
 Provides Ibeacon and any other beacon scanning.<br>
 Configuration operation for CoreBLU tags.<br>
+Turn on LED and Buzzer
 
 Sample Application:<br>
-A sample application for scanning All beacons and ibeacons and configuring coreBLU beacons.
+A sample application for scanning beacons and configuring coreBLU Tags.
 
 More information can be fount here:<br>
 https://github.com/coreblu/CoreBLU-SDK/wiki<br>
