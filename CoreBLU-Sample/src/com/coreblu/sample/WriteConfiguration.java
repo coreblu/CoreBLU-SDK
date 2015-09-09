@@ -1,6 +1,7 @@
 package com.coreblu.sample;
 
 import java.util.UUID;
+
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
@@ -10,10 +11,13 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.coreblu.sample.R;
+
 import coreblu.SDK.Configuration.CharacteristicsResponce;
 import coreblu.SDK.Configuration.CorebluiBeaconCharacteristic;
 import coreblu.SDK.Configuration.CorebluiBeaconConfiguration;
+import coreblu.SDK.Configuration.CorebluiBeaconConfiguration.TagInfo;
 
 public class WriteConfiguration extends Activity implements CorebluiBeaconConfiguration.CallBack{
 
@@ -175,12 +179,6 @@ public class WriteConfiguration extends Activity implements CorebluiBeaconConfig
 		output.setText(output.getText().toString()+"\nInterval"+Interval);
 	}
 
-	@Override
-	public void onTagInfoReady(String[] TagInfo) {
-		// TODO Auto-generated method stub
-		logi("TagInfo"+TagInfo[0]+" "+TagInfo[1]);
-		output.setText(output.getText().toString()+"\nTagInfo"+TagInfo[0]+" "+TagInfo[1]);
-	}
 
 	@Override
 	public void onRssiReady(int Rssi) {
@@ -204,6 +202,18 @@ public class WriteConfiguration extends Activity implements CorebluiBeaconConfig
 			showToast("Write failed..");
 			logi("Write failed..");
 		}
+	}
+	
+	@Override
+	public void onFirmwareUpdateAvailable(String UpdateInfo) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onTagInfoReady(TagInfo info) {
+		// TODO Auto-generated method stub
+		output.setText(output.getText().toString()+"\nTagInfo:"+info.getTagName()+" v"+info.getTagVersion());		
 	}
 
 	@Override
@@ -243,5 +253,7 @@ public class WriteConfiguration extends Activity implements CorebluiBeaconConfig
 	{
 		Log.i(TAG , msg);
 	}
+
+
 
 }

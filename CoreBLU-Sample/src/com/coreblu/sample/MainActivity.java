@@ -1,15 +1,23 @@
 package com.coreblu.sample;
 
+//import com.crashlytics.android.Crashlytics;
+//import io.fabric.sdk.android.Fabric;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Locale;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -18,7 +26,6 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
-import com.coreblu.sample.R;
 import coreblu.SDK.Beacons.AnyBeacon;
 import coreblu.SDK.Beacons.Beacon;
 import coreblu.SDK.Beacons.iBeacon;
@@ -27,6 +34,7 @@ import coreblu.SDK.CorebluDevice.CorebluDeviceManager.AnyBeaconListener;
 import coreblu.SDK.CorebluDevice.CorebluDeviceManager.IBeaconsInRegionListner;
 import coreblu.SDK.CorebluDevice.CorebluDeviceManager.iBeaconListener;
 import coreblu.SDK.CorebluDevice.Region;
+
 
 public class MainActivity extends Activity {
 
@@ -88,8 +96,10 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		//Fabric.with(this, new Crashlytics());
 
 		setContentView(R.layout.activity_main);
+
 
 		if (ensureBleExists()  && !isBleEnabled())
 		{
@@ -97,6 +107,7 @@ public class MainActivity extends Activity {
 		}
 
 		mCorebluDeviceManager =CorebluDeviceManager.getInstance(getApplicationContext());
+		
 		mListAdapterIbeacon = new ListAdapterIbeacon(this , new ArrayList<iBeacon>() , R.layout.beacon_list_layout);
 		anyBeaconAdapter = new ListAdapter(this , new ArrayList<AnyBeacon>() , R.layout.beacon_list_layout);
 
@@ -250,7 +261,6 @@ public class MainActivity extends Activity {
 		{
 			scanningAllBeacons=false;
 			startAllBeaconScan.setText("Start All Beacon Scan");
-
 		}
 
 		if(scanningIbeacons)
@@ -286,8 +296,6 @@ public class MainActivity extends Activity {
 				// TODO Auto-generated method stub
 				Log.i("Beacon Found",arg0.getMacAddress());
 				anyBeaconAdapter.add(arg0);
-
-
 			}
 		});
 	}
@@ -314,10 +322,11 @@ public class MainActivity extends Activity {
 				if(coreBluTags)
 				{
 					if(arg0.getType().equals(Beacon.BEACON_TYPE_COREBLU_IBEACON))
-
 						mListAdapterIbeacon.add(arg0);
+								
 				}
-				else{
+				else
+				{
 					mListAdapterIbeacon.add(arg0);
 				}
 			}
@@ -332,19 +341,42 @@ public class MainActivity extends Activity {
 
 	private void startScanIBeaconsInRegion()
 	{
+		ArrayList<Region> regionsToMonitor = new ArrayList<Region>();
+		
+		regionsToMonitor.add(new Region("my room", "A3ACCFE2-E95D-433C-BCF4-643BECC5D218",null, null));
+		//regionsToMonitor.add(new Region("MyDex","8c5e1368-1269-11e5-9493-1697f925e123",null, null));
+		regionsToMonitor.add(new Region("other room","8C5E1368-1269-11E5-9493-1697F925E123".toLowerCase(Locale.ENGLISH),null, null));
+		
+		
 		scanningInRegion=true;
 		startScanningInRegion.setText("Stop beacon in region Scan");
 		mListAdapterIbeacon.clear();
 		mCorebluDeviceManager.startiBeaconScan(new IBeaconsInRegionListner() {
-
 			@Override
 			public void IBeaconsInRegion(Collection<iBeacon> beacons , Region region) {
 				// TODO Auto-generated method stub
 				Log.i("Beacons Found" ,"Beacon Count:"+beacons.size()+" Region:"+region.getName());
-
+				for(iBeacon beacon: beacons){
+					if(beacon.getType().equals(Beacon.BEACON_TYPE_COREBLU_IBEACON))
+						Log.i("Battery Voltage","MAC:"+beacon.getMacAddress()+" Voltage="+beacon.getbatteryVoltage());
+					
+				}
 				mListAdapterIbeacon.add(beacons);
 			}
-		} , new Region("bee", "8c5e1368-1269-11e5-9493-1697f925ec7b",null, null));
+
+			@Override
+			public void didExitRegion(Region region) {
+				// TODO Auto-generated method stub
+				showToast("Exit Region:"+region.getName());
+				
+			}
+
+			@Override
+			public void didEnterRegion(Region region) {
+				// TODO Auto-generated method stub
+				showToast("Enter Region:"+region.getName());
+			}
+		} ,regionsToMonitor);
 	}
 
 	private void showToast(String msg)
