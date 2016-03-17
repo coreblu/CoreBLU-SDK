@@ -3,28 +3,33 @@ package com.coreblu.sample;
 import java.util.UUID;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.FragmentManager;
 import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.coreblu.sample.R;
-
 import coreblu.SDK.Configuration.CharacteristicsResponce;
 import coreblu.SDK.Configuration.CorebluiBeaconCharacteristic;
 import coreblu.SDK.Configuration.CorebluiBeaconConfiguration;
+import coreblu.SDK.Configuration.CorebluiBeaconConfiguration.FirmwareUpdateProgress;
 import coreblu.SDK.Configuration.CorebluiBeaconConfiguration.TagInfo;
+import coreblu.SDK.Configuration.OtaResult;
 
 public class WriteConfiguration extends Activity implements CorebluiBeaconConfiguration.CallBack{
 
 	private CorebluiBeaconConfiguration mCorebluiBeaconConfiguration;
 	private TextView output;
 	private Button write,buzzer,led;
-
+	boolean alertReady = false;
 	private boolean connected = false;
 	private final String TAG = getClass().getSimpleName().toString();
 
@@ -55,10 +60,12 @@ public class WriteConfiguration extends Activity implements CorebluiBeaconConfig
 			public void onClick(View arg0) {
 				// TODO Auto-generated method stub
 				write();
+				//mCorebluiBeaconConfiguration.updateFirmware(WriteConfiguration.this);
 
 			}
 		});
 
+		
 		buzzer.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -134,7 +141,6 @@ public class WriteConfiguration extends Activity implements CorebluiBeaconConfig
 		{
 			showToast("Disconnected");
 			connected=false;
-			mCorebluiBeaconConfiguration.connect();
 		}
 
 		if(state == CorebluiBeaconConfiguration.STATE_CONNECTING)
@@ -203,11 +209,12 @@ public class WriteConfiguration extends Activity implements CorebluiBeaconConfig
 			logi("Write failed..");
 		}
 	}
-	
+
 	@Override
-	public void onFirmwareUpdateAvailable(String UpdateInfo) {
+	public void onFirmwareUpdateAvailable(String newVersion , String currentVersion) {
 		// TODO Auto-generated method stub
-		
+		updateFirmware(newVersion,currentVersion );
+
 	}
 
 	@Override
@@ -240,7 +247,6 @@ public class WriteConfiguration extends Activity implements CorebluiBeaconConfig
 	private void showToast(final String msg)
 	{
 		runOnUiThread(new Runnable() {
-
 			@Override
 			public void run() {
 				// TODO Auto-generated method stub
@@ -249,11 +255,233 @@ public class WriteConfiguration extends Activity implements CorebluiBeaconConfig
 		});
 	}
 
+	private void updateFirmware(String newVersion , String currentVersion){
+		FragmentManager fm = getFragmentManager();
+		UpdateDialog newFragment = new UpdateDialog(newVersion,currentVersion);
+		newFragment.show(fm, "abc");
+	}
+
 	private void logi(String msg)
 	{
 		Log.i(TAG , msg);
 	}
 
+	public class UpdateDialog extends DialogFragment {
 
+		String version;
+		String cversion;
+
+		@Override
+		public void onCreate(Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+			//setCancelable(false);
+		}
+
+		public UpdateDialog(final String version ,final String cversion){
+			this.version = version;
+			this.cversion = cversion;
+		}
+
+
+
+
+		@Override
+		public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+			final Button update,cancel;
+			final ProgressBar progress;
+			final TextView message;
+			final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+			setTitle("Update Tag Firmware");
+
+			LayoutInflater inflater = getActivity().getLayoutInflater();
+
+			View dView = inflater.inflate(R.layout.update_firmware,  null);
+			update = (Button) dView.findViewById(R.id.update);
+			cancel = (Button) dView.findViewById(R.id.cancel);
+			message = (TextView) dView.findViewById(R.id.message);
+			progress = (ProgressBar) dView.findViewById(R.id.update_progress);
+
+			progress.setScaleY(2f);
+
+			message.setText("Firmware version v"+version+" is available, current version is v"+cversion+" do you want to update?");
+			cancel.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					// TODO Auto-generated method stub
+					dismiss();
+				}
+			});
+
+			update.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					// TODO Auto-generated method stub
+					if(update.getText().toString().equals("dismiss"))
+					{dismiss();return;}
+
+					cancel.setVisibility(View.GONE);
+					update.setText("Updating");
+					update.setEnabled(false);
+					mCorebluiBeaconConfiguration.updateFirmware(new FirmwareUpdateProgress() {
+
+						@Override
+						public void onUpdateStart(String deviceAddress) {
+							// TODO Auto-generated method stub
+							onUISetText(message, "Updating..");
+							onUISetProfress(progress,message, "Updating..",0);
+						}
+
+						@Override
+						public void onUpdateComplete(String deviceAddress) {
+							// TODO Auto-generated method stub
+							onUISetText(message, "Update Complete");
+						}
+
+						@Override
+						public void onProgressChanged(String deviceAddress, int percent,
+								float speed, float avgSpeed, int currentPart, int partsTotal) {
+							// TODO Auto-generated method stub
+							onUISetProfress(progress,message,"Updating..."+percent+"% completed",percent);
+						}
+
+						@Override
+						public void onError(String deviceAddress, int errorType) {
+							// TODO Auto-generated method stub
+							String msg="";
+							switch(errorType){
+							case CorebluiBeaconConfiguration.UPDATE_ERROR_CONNECTION_ERROR:
+								msg = "Connection error";
+								break;
+							case CorebluiBeaconConfiguration.UPDATE_ERROR_ENTER_UPDATE_MODE_FAILED:
+								msg = "Failed to enter update mode";
+								break;
+							case CorebluiBeaconConfiguration.UPDATE_ERROR_FIRMWARE_UPTO_DATE:
+								msg = "Firmware alredy upto date";
+								break;
+							case CorebluiBeaconConfiguration.UPDATE_ERROR_UPDATE_ABORTED:
+								msg = "Update aborted";
+								break;
+							case CorebluiBeaconConfiguration.UPDATE_ERROR_RE_CONFIGURE_ERROR:
+								msg = "Firmware updated but writing old values failed";
+								break;
+							default:
+								msg="Unknown error";
+								break;
+							}
+
+							onUISetText(message, "Update Failed :"+msg);
+							runOnUiThread(new Runnable() {
+
+								@Override
+								public void run() {
+									// TODO Auto-generated method stub
+									update.setEnabled(true);
+									update.setText("dismiss");
+								}
+							});
+						}
+
+						@Override
+						public void onDeviceConnecting(String deviceAddress) {
+							// TODO Auto-generated method stub
+							onUISetText(message, "Connecting...");
+						}
+
+						@Override
+						public void OnDownloadStart() {
+							// TODO Auto-generated method stub
+							//message.setText("Downloading...");
+							onUISetText(message, "Downloading...");
+
+						}
+
+						@Override
+						public void OnDownloadProgressUpdate(int percent) {
+							// TODO Auto-generated method stub
+							onUISetProfress(progress,message,"Downloading..."+percent+"% completed",percent);
+						}
+
+						@Override
+						public void OnDownloadError(String err) {
+							// TODO Auto-generated method stub
+							runOnUiThread(new Runnable() {
+
+								@Override
+								public void run() {
+									// TODO Auto-generated method stub
+									update.setEnabled(true);
+									update.setText("dismiss");
+								}
+							});
+						}
+
+						@Override
+						public void EnteringUpdateMode() {
+							// TODO Auto-generated method stub
+							onUISetText(message, "Entering Update Mode");
+
+						}
+
+						@Override
+						public void OnReConfiguring(String status) {
+							// TODO Auto-generated method stub
+							onUISetText(message, status);
+						}
+
+
+						@Override
+						public void onOperationComplete(OtaResult result) {
+							// TODO Auto-generated method stub
+							if(result.isOtaSuccessfull())
+								onUISetText(message, "Update Completed Successfully");
+							runOnUiThread(new Runnable() {
+
+								@Override
+								public void run() {
+									// TODO Auto-generated method stub
+									//dismiss();
+									update.setEnabled(true);
+									update.setText("dismiss");
+								}
+							});
+						}
+					});
+
+				}
+			});
+
+
+			builder.setView(dView);
+			AlertDialog dialog =  builder.create();
+			dialog.setTitle("Firmware Update");
+			return dialog;
+		}
+	}
+
+	private void onUISetProfress(final ProgressBar progress, final TextView message ,final String msg , final int percent){
+		runOnUiThread(new Runnable() {
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				message.setText(msg);
+				progress.setProgress(percent);
+			}
+		});
+
+	}
+
+	private void onUISetText(final TextView message ,final String msg ){
+		runOnUiThread(new Runnable() {
+
+			@Override
+			public void run() {
+				message.setText(msg);
+			}
+		});
+
+	}
 
 }

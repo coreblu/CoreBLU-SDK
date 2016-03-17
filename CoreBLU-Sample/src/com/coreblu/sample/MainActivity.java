@@ -25,6 +25,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import coreblu.SDK.Beacons.AnyBeacon;
 import coreblu.SDK.Beacons.Beacon;
@@ -50,6 +51,7 @@ public class MainActivity extends Activity {
 	private final String stopAllBeaconScan = "Please stop all beacon scan first";
 	private final String stopInRegionBeaconScan = "Please stop in region beacon scan first";
 	private final int REQUEST_ENABLE_BT = 1;
+	private TextView count;
 
 	/**
 	 * Checks whether the Bluetooth adapter is enabled.
@@ -107,9 +109,11 @@ public class MainActivity extends Activity {
 		}
 
 		mCorebluDeviceManager =CorebluDeviceManager.getInstance(getApplicationContext());
+		//mCorebluDeviceManager.StartHealthMonitoring(30);
 		
 		mListAdapterIbeacon = new ListAdapterIbeacon(this , new ArrayList<iBeacon>() , R.layout.beacon_list_layout);
 		anyBeaconAdapter = new ListAdapter(this , new ArrayList<AnyBeacon>() , R.layout.beacon_list_layout);
+		count = (TextView) findViewById(R.id.count);
 
 		listv = (ListView)findViewById(R.id.beacon_listview);
 		listv.setOnItemLongClickListener(new OnItemLongClickListener() {
@@ -207,7 +211,6 @@ public class MainActivity extends Activity {
 				else
 				{
 					//Starting Scan
-
 					startScanAllBeacons();
 					listv.setAdapter(anyBeaconAdapter);
 				}
@@ -284,18 +287,19 @@ public class MainActivity extends Activity {
 		startAllBeaconScan.setText("Stop All Beacon Scan");
 		mCorebluDeviceManager.startAllBeaconScan(new AnyBeaconListener() {
 
-			@Override
-			public void onException(Exception arg0) {
-				// TODO Auto-generated method stub
-				arg0.printStackTrace();
-
-			}
-
+			
 			@Override
 			public void onAnyBeaconFound(AnyBeacon arg0) {
 				// TODO Auto-generated method stub
 				Log.i("Beacon Found",arg0.getMacAddress());
 				anyBeaconAdapter.add(arg0);
+				count.setText("count ="+anyBeaconAdapter.getCount());
+			}
+
+			@Override
+			public void onError(int errorType) {
+				// TODO Auto-generated method stub
+				handleError(errorType);
 			}
 		});
 	}
@@ -304,7 +308,7 @@ public class MainActivity extends Activity {
 	private void startScanIBeacons()
 	{
 
-		final boolean coreBluTags = false;
+		final boolean coreBluTags = true;
 		scanningIbeacons=true;
 		startIbeaconScan.setText("Stop IBeacon Scan");
 		mListAdapterIbeacon.clear();
@@ -323,18 +327,27 @@ public class MainActivity extends Activity {
 				{
 					if(arg0.getType().equals(Beacon.BEACON_TYPE_COREBLU_IBEACON))
 						mListAdapterIbeacon.add(arg0);
+					
+//					if(arg0.getMacAddress().equals("FE:A6:90:F5:11:22")){
+//						Intent i = new Intent(MainActivity.this , WriteConfiguration.class);
+//					i.putExtra("device", arg0.getDevice());
+//					startActivity(i);
+//					}
+						
 								
 				}
 				else
 				{
 					mListAdapterIbeacon.add(arg0);
 				}
+				
+				count.setText("count ="+mListAdapterIbeacon.getCount());
 			}
 
 			@Override
-			public void onException(Exception arg0) {
+			public void onError(int errorType) {
 				// TODO Auto-generated method stub
-
+				handleError(errorType);
 			}
 		});
 	}
@@ -343,10 +356,7 @@ public class MainActivity extends Activity {
 	{
 		ArrayList<Region> regionsToMonitor = new ArrayList<Region>();
 		
-		regionsToMonitor.add(new Region("my room", "A3ACCFE2-E95D-433C-BCF4-643BECC5D218",null, null));
-		//regionsToMonitor.add(new Region("MyDex","8c5e1368-1269-11e5-9493-1697f925e123",null, null));
-		regionsToMonitor.add(new Region("other room","8C5E1368-1269-11E5-9493-1697F925E123".toLowerCase(Locale.ENGLISH),null, null));
-		
+		regionsToMonitor.add(new Region("my room", null,null, null));
 		
 		scanningInRegion=true;
 		startScanningInRegion.setText("Stop beacon in region Scan");
@@ -362,6 +372,7 @@ public class MainActivity extends Activity {
 					
 				}
 				mListAdapterIbeacon.add(beacons);
+				count.setText("count ="+mListAdapterIbeacon.getCount());
 			}
 
 			@Override
@@ -376,6 +387,13 @@ public class MainActivity extends Activity {
 				// TODO Auto-generated method stub
 				showToast("Enter Region:"+region.getName());
 			}
+			
+			@Override
+			public void onError(int errorType) {
+				// TODO Auto-generated method stub
+				handleError(errorType);
+			}
+			
 		} ,regionsToMonitor);
 	}
 
@@ -416,5 +434,20 @@ public class MainActivity extends Activity {
 
 		AlertDialog dialog = builder.create();
 		dialog.show();
+	}
+	
+	private void handleError(int error){
+		
+//		switch (error){
+//		case CorebluDeviceManager.ERROR_BLE_NOT_AVAILABLE:
+//			showToast("Ble not available on device");
+//			break;
+//		case CorebluDeviceManager.ERROR_BLUETOOTH_DISABLED:
+//			showToast("bluetooth disabled");
+//			enableBle();
+//			break;
+//			default:
+//				break;
+//		}
 	}
 }

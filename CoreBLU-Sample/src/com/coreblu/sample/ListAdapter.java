@@ -22,7 +22,7 @@ public class ListAdapter extends ArrayAdapter<AnyBeacon> {
 	private Map<String, AnyBeacon>  bMap = new HashMap<String, AnyBeacon>();
 	private final int LIST_REFRESH_TIME=1000;//time in ms 
 	private long previousTime=0;
-	//private int currentTime =0;
+
 
 	public ListAdapter(Activity context, List<AnyBeacon> Items,int LayoutID) {
 		super(context, LayoutID,Items);
