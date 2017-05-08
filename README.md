@@ -22,7 +22,6 @@ https://github.com/coreblu/CoreBLU-SDK/wiki<br>
 
 
 Configuration Application on Playstore<br>
-https://play.google.com/store/apps/details?id=gistic.coreblu.Configuration
-
+https://play.google.com/store/apps/details?id=com.coreblu.beaconmanager
 
 
